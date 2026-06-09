@@ -1,17 +1,23 @@
 {
   "expo": {
-    "name": "buffit-mobile",
-    "slug": "buffit-mobile",
+    "name": "BUFFIT",
+    "slug": "buffit",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "scheme": "buffit",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.buffit.app",
+      "buildNumber": "1"
     },
     "android": {
+      "package": "com.buffit.app",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#D99B00",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -22,14 +28,27 @@
       "bundler": "metro",
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "buffit",
-    "experiments": {
-      "typedRoutes": true
-    },
     "plugins": [
       "expo-router",
       "expo-status-bar",
-      "expo-sharing"
-    ]
+      "expo-sharing",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F4F5FA",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200
+        }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }
