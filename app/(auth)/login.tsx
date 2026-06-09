@@ -58,13 +58,8 @@ export default function LoginScreen() {
         redirectUri
       );
 
-      if (browserResult.type !== "success" || !browserResult.url) {
-        // User cancelled or browser closed without completing OAuth
-        return;
-      }
+      if (browserResult.type !== "success" || !browserResult.url) return;
 
-      // Use Linking.parse() — handles exp:// and buffit:// custom schemes
-      // that new URL() may not parse correctly in React Native / Hermes
       const parsed = Linking.parse(browserResult.url);
       const code = parsed.queryParams?.["code"] as string | undefined;
 
