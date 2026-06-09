@@ -49,24 +49,31 @@ export default function LoginScreen() {
   async function handleGoogle() {
     setLoading(true);
     try {
-      // signIn("google") returns a redirect URL that we open in the in-app browser.
-      // After the user completes OAuth, Convex redirects back to buffit:// with a code.
-      // We then call signIn("google", { code }) to finalize the session.
       const redirectUri = Linking.createURL("/");
       const result = await signIn("google", { redirectTo: redirectUri });
-      if (result.redirect) {
-        const browserResult = await WebBrowser.openAuthSessionAsync(
-          result.redirect.toString(),
-          redirectUri
-        );
-        if (browserResult.type === "success" && browserResult.url) {
-          const parsed = new URL(browserResult.url);
-          const code = parsed.searchParams.get("code");
-          if (code) {
-            await signIn("google", { code });
-          }
-        }
+      if (!result.redirect) return;
+
+      const browserResult = await WebBrowser.openAuthSessionAsync(
+        result.redirect.toString(),
+        redirectUri
+      );
+
+      if (browserResult.type !== "success" || !browserResult.url) {
+        // User cancelled or browser closed without completing OAuth
+        return;
       }
+
+      // Use Linking.parse() — handles exp:// and buffit:// custom schemes
+      // that new URL() may not parse correctly in React Native / Hermes
+      const parsed = Linking.parse(browserResult.url);
+      const code = parsed.queryParams?.["code"] as string | undefined;
+
+      if (!code) {
+        Alert.alert("เกิดข้อผิดพลาด", "ไม่พบ code จาก Google OAuth กรุณาลองอีกครั้ง");
+        return;
+      }
+
+      await signIn("google", { code });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       Alert.alert("เกิดข้อผิดพลาด", msg);
