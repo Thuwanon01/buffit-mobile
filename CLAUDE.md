@@ -24,4 +24,4 @@ pausing to confirm. Does NOT extend to destructive git operations (force-push,
 
 ## Migration plan
 Full plan: `docs/convert-to-react-native-plan.en.md` (or the Thai version).
-Current phase: **Phase 1** (walking skeleton — Convex wiring).
+Current phase: **Phase 3 / Phase 4** (Phase 1 ✅ walking skeleton, Phase 2 ✅ auth, Phase 3 ✅ nav shell — now porting pages in Phase 4).
