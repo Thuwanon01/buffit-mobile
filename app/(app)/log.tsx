@@ -3,7 +3,6 @@ import { useAction, useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,6 +13,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Card, RoundPicker, SectionLabel } from "../../src/components/ui";
@@ -142,7 +142,7 @@ export default function LogScreen() {
         coinAmt: selectedActivityData?.weightMultiplier.toFixed(1) ?? "1.0",
       });
     } catch (err) {
-      Alert.alert("เกิดข้อผิดพลาด", err instanceof Error ? err.message : "ลองใหม่อีกครั้ง");
+      Toast.show({ type: "error", text1: "เกิดข้อผิดพลาด", text2: err instanceof Error ? err.message : "ลองใหม่อีกครั้ง" });
     } finally {
       setLoading(false);
     }
@@ -152,9 +152,9 @@ export default function LogScreen() {
     setJoiningId(roundId);
     try {
       await joinRound({ roundId });
-      Alert.alert("สำเร็จ", "เข้าร่วม round แล้ว!");
+      Toast.show({ type: "success", text1: "สำเร็จ", text2: "เข้าร่วม round แล้ว! 🎉" });
     } catch (err) {
-      Alert.alert("เกิดข้อผิดพลาด", err instanceof Error ? err.message : "ลองใหม่อีกครั้ง");
+      Toast.show({ type: "error", text1: "เกิดข้อผิดพลาด", text2: err instanceof Error ? err.message : "ลองใหม่อีกครั้ง" });
     } finally {
       setJoiningId(null);
     }
@@ -166,7 +166,7 @@ export default function LogScreen() {
     try {
       const { entries } = await parseFreeTextLog({ text: freeText });
       if (entries.length === 0) {
-        Alert.alert("AI ไม่พบกิจกรรม", "ลองพิมพ์ใหม่อีกครั้ง");
+        Toast.show({ type: "info", text1: "AI ไม่พบกิจกรรม", text2: "ลองพิมพ์ใหม่อีกครั้ง" });
         return;
       }
       setLogStage({
@@ -179,7 +179,7 @@ export default function LogScreen() {
         })),
       });
     } catch (err) {
-      Alert.alert("เกิดข้อผิดพลาด", err instanceof Error ? err.message : "ลองใหม่อีกครั้ง");
+      Toast.show({ type: "error", text1: "เกิดข้อผิดพลาด", text2: err instanceof Error ? err.message : "ลองใหม่อีกครั้ง" });
     } finally {
       setLoading(false);
     }
@@ -207,7 +207,7 @@ export default function LogScreen() {
       const result = await confirmAutoLog({ roundId: activeRound._id, entries: finalEntries });
       setLogStage({ stage: "ai_result", result });
     } catch (err) {
-      Alert.alert("เกิดข้อผิดพลาด", err instanceof Error ? err.message : "ลองใหม่อีกครั้ง");
+      Toast.show({ type: "error", text1: "เกิดข้อผิดพลาด", text2: err instanceof Error ? err.message : "ลองใหม่อีกครั้ง" });
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import {
   ActivityIndicator,
+  Dimensions,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -9,9 +10,12 @@ import {
   Text,
   View,
 } from "react-native";
+import { VictoryBar, VictoryChart, VictoryAxis, VictoryGroup } from "victory-native";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Card, RoundPicker } from "../../src/components/ui";
+
+const CHART_WIDTH = Dimensions.get("window").width - 32;
 
 const C = {
   gold: "#D99B00",
@@ -23,7 +27,6 @@ const C = {
   white: "#FFFFFF",
 } satisfies Record<string, string>;
 
-// Matt Pocock: narrow tab type instead of plain string
 type Tab = "feed" | "chart";
 
 export default function HistoryScreen() {
@@ -33,6 +36,8 @@ export default function HistoryScreen() {
   const feedData = useQuery(api.workoutLogs.getHistoryFeedData, {
     roundId: selectedRoundId ?? undefined,
   });
+  const progressData = useQuery(api.workoutLogs.getProgressData);
+  const me = useQuery(api.users.getCurrentUser);
 
   if (feedData === undefined) {
     return (
@@ -47,6 +52,22 @@ export default function HistoryScreen() {
   const logs = feedData?.logs ?? [];
   const rounds = feedData?.rounds ?? [];
   const selectedRound = feedData?.selectedRound ?? null;
+
+  // Build chart data: current user's coins (weight + cardio) per round, sorted by creation time
+  const myChartData = useMemo(() => {
+    if (!progressData || !me) return [];
+    const myId = String(me._id);
+    const sorted = [...progressData.rounds].sort((a, b) => a._creationTime - b._creationTime);
+    return sorted.map((round, i) => {
+      const entry = progressData.entries.find((e) => e.userId === myId && e.roundId === String(round._id));
+      return {
+        x: i + 1,
+        label: round.name.length > 8 ? round.name.slice(0, 7) + "…" : round.name,
+        weight: entry?.weightCoins ?? 0,
+        cardio: entry?.cardioCoins ?? 0,
+      };
+    });
+  }, [progressData, me]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -65,16 +86,80 @@ export default function HistoryScreen() {
           ))}
         </View>
 
-        {/* Chart tab — Phase 5 placeholder */}
+        {/* Chart tab */}
         {tab === "chart" && (
-          <View style={styles.chartPlaceholder}>
-            <Text style={styles.chartPlaceholderEmoji}>📊</Text>
-            <Text style={styles.chartPlaceholderTitle}>กราฟ Progress</Text>
-            <Text style={styles.chartPlaceholderSub}>
-              กราฟสะสม coin รายรอบจะพร้อมใน Phase 5{"\n"}
-              (ต้องติดตั้ง victory-native แทน Recharts)
-            </Text>
-          </View>
+          progressData === undefined ? (
+            <View style={styles.chartPlaceholder}>
+              <ActivityIndicator color={C.gold} />
+            </View>
+          ) : myChartData.length === 0 ? (
+            <View style={styles.chartPlaceholder}>
+              <Text style={styles.chartPlaceholderEmoji}>📊</Text>
+              <Text style={styles.chartPlaceholderSub}>ยังไม่มีข้อมูลกราฟ</Text>
+            </View>
+          ) : (
+            <View style={styles.chartWrap}>
+              {/* Legend */}
+              <View style={styles.legend}>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: C.gold }]} />
+                  <Text style={styles.legendLabel}>Weight 💪</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: C.red }]} />
+                  <Text style={styles.legendLabel}>Cardio 🏃</Text>
+                </View>
+              </View>
+
+              <VictoryChart
+                width={CHART_WIDTH}
+                height={240}
+                domainPadding={{ x: 20 }}
+                padding={{ top: 10, bottom: 50, left: 40, right: 16 }}
+              >
+                <VictoryAxis
+                  tickValues={myChartData.map((d) => d.x)}
+                  tickFormat={(x: number) => myChartData[x - 1]?.label ?? ""}
+                  style={{
+                    axis: { stroke: C.border },
+                    tickLabels: { fontSize: 9, fill: C.muted, angle: -20, textAnchor: "end" },
+                    grid: { stroke: "transparent" },
+                  }}
+                />
+                <VictoryAxis
+                  dependentAxis
+                  style={{
+                    axis: { stroke: "transparent" },
+                    tickLabels: { fontSize: 9, fill: C.muted },
+                    grid: { stroke: C.border, strokeDasharray: "3,3" },
+                  }}
+                />
+                <VictoryGroup offset={10}>
+                  <VictoryBar
+                    data={myChartData.map((d) => ({ x: d.x, y: d.weight }))}
+                    style={{ data: { fill: C.gold, borderRadius: 4 } }}
+                    barWidth={9}
+                    cornerRadius={{ top: 3 }}
+                  />
+                  <VictoryBar
+                    data={myChartData.map((d) => ({ x: d.x, y: d.cardio }))}
+                    style={{ data: { fill: C.red } }}
+                    barWidth={9}
+                    cornerRadius={{ top: 3 }}
+                  />
+                </VictoryGroup>
+              </VictoryChart>
+
+              {/* Round-by-round breakdown */}
+              {myChartData.filter((d) => d.weight > 0 || d.cardio > 0).map((d, i) => (
+                <View key={i} style={styles.roundRow}>
+                  <Text style={styles.roundName} numberOfLines={1}>{d.label}</Text>
+                  <Text style={[styles.roundStat, { color: C.gold }]}>💪 {d.weight.toFixed(1)}</Text>
+                  <Text style={[styles.roundStat, { color: C.red }]}>🏃 {d.cardio.toFixed(1)}</Text>
+                </View>
+              ))}
+            </View>
+          )
         )}
 
         {/* Feed tab */}
@@ -152,15 +237,27 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 13, fontWeight: "800", color: "#AAAACC", letterSpacing: 0.5 },
   tabTextActive: { color: C.gold },
 
-  // Chart placeholder
+  // Chart
   chartPlaceholder: {
     alignItems: "center", padding: 40,
     backgroundColor: C.white, borderRadius: 16,
-    borderWidth: 1, borderColor: C.border, borderStyle: "dashed",
+    borderWidth: 1, borderColor: C.border,
   },
   chartPlaceholderEmoji: { fontSize: 44, marginBottom: 10 },
-  chartPlaceholderTitle: { fontSize: 16, fontWeight: "700", color: C.dark, marginBottom: 6 },
-  chartPlaceholderSub: { fontSize: 13, color: C.muted, textAlign: "center", lineHeight: 20 },
+  chartPlaceholderSub: { fontSize: 13, color: C.muted, textAlign: "center" },
+
+  chartWrap: {
+    backgroundColor: C.white, borderRadius: 16, padding: 12,
+    borderWidth: 1, borderColor: C.border, marginBottom: 8,
+  },
+  legend: { flexDirection: "row", gap: 16, marginBottom: 4, paddingHorizontal: 4 },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: 5 },
+  legendDot: { width: 9, height: 9, borderRadius: 99 },
+  legendLabel: { fontSize: 11, color: C.muted, fontWeight: "600" },
+
+  roundRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 5, borderTopWidth: 1, borderTopColor: "#F0F0F8" },
+  roundName: { flex: 1, fontSize: 12, color: C.dark, fontWeight: "600" },
+  roundStat: { fontSize: 12, fontWeight: "700", minWidth: 48, textAlign: "right" },
 
   // Feed empty state
   emptyFeed: { alignItems: "center", paddingVertical: 48 },

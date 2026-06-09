@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import {
@@ -10,6 +10,9 @@ import {
   Text,
   View,
 } from "react-native";
+import ViewShot from "react-native-view-shot";
+import * as Sharing from "expo-sharing";
+import Toast from "react-native-toast-message";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Card, CoinProgressRow, ProgressBar, RoundPicker, SectionLabel } from "../../src/components/ui";
@@ -28,6 +31,22 @@ const C = {
 export default function DashboardScreen() {
   const router = useRouter();
   const [selectedRoundId, setSelectedRoundId] = useState<Id<"rounds"> | null>(null);
+  const shareRef = useRef<ViewShot>(null);
+
+  async function handleShare() {
+    try {
+      const uri = await (shareRef.current as any)?.capture?.();
+      if (!uri) return;
+      const canShare = await Sharing.isAvailableAsync();
+      if (!canShare) {
+        Toast.show({ type: "info", text1: "แชร์ไม่ได้", text2: "อุปกรณ์นี้ไม่รองรับการแชร์" });
+        return;
+      }
+      await Sharing.shareAsync(uri, { mimeType: "image/png", dialogTitle: "แชร์ progress ของคุณ" });
+    } catch {
+      Toast.show({ type: "error", text1: "เกิดข้อผิดพลาด", text2: "ไม่สามารถแชร์ได้ กรุณาลองใหม่" });
+    }
+  }
 
   const data = useQuery(api.dashboard.getDashboardPage, {
     roundId: selectedRoundId ?? undefined,
@@ -119,6 +138,15 @@ export default function DashboardScreen() {
         {/* ── Active round hero card ───────────────────────────────── */}
         {activeRound && (
           <>
+            {/* Share button */}
+            <Pressable
+              onPress={handleShare}
+              style={({ pressed }) => [styles.shareBtn, pressed && { opacity: 0.7 }]}
+            >
+              <Text style={styles.shareBtnText}>📤 แชร์ Progress</Text>
+            </Pressable>
+
+            <ViewShot ref={shareRef} options={{ format: "png", quality: 0.95 }} style={styles.shareCapture}>
             <View style={styles.heroCard}>
               <Text style={styles.heroBg}>🍲</Text>
 
@@ -195,6 +223,7 @@ export default function DashboardScreen() {
                 </View>
               </Card>
             )}
+            </ViewShot>
 
             {/* ── CTA ─────────────────────────────────────────────── */}
             <Pressable
@@ -270,6 +299,13 @@ const styles = StyleSheet.create({
   statBadge: { flex: 1, borderRadius: 9, padding: 8, alignItems: "center" },
   statBadgeValue: { fontSize: 17, fontWeight: "800" },
   statBadgeLabel: { fontSize: 10, color: "#AAAACC", marginTop: 1 },
+
+  // Share
+  shareCapture: { backgroundColor: C.bg },
+  shareBtn: {
+    flexDirection: "row", justifyContent: "flex-end", marginBottom: 8,
+  },
+  shareBtnText: { fontSize: 13, fontWeight: "700", color: C.muted },
 
   // CTA
   ctaBtn: {
