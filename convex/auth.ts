@@ -6,6 +6,22 @@ import { MutationCtx } from "./_generated/server";
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [Google, Password],
   callbacks: {
+    async redirect({ redirectTo }: { redirectTo: string }) {
+      const siteUrl = (process.env.SITE_URL ?? "").replace(/\/$/, "");
+      if (redirectTo.startsWith("?") || redirectTo.startsWith("/")) {
+        return `${siteUrl}${redirectTo}`;
+      }
+      if (redirectTo.startsWith(siteUrl)) {
+        return redirectTo;
+      }
+      // Allow React Native / Expo custom schemes
+      if (redirectTo.startsWith("exp://") || redirectTo.startsWith("buffit://")) {
+        return redirectTo;
+      }
+      throw new Error(
+        `Invalid \`redirectTo\` ${redirectTo} for configured SITE_URL: ${siteUrl}`
+      );
+    },
     async createOrUpdateUser(ctx: MutationCtx, args) {
       const { existingUserId, profile } = args;
       if (existingUserId) {
