@@ -39,21 +39,8 @@ export default function HistoryScreen() {
   const progressData = useQuery(api.workoutLogs.getProgressData);
   const me = useQuery(api.users.getCurrentUser);
 
-  if (feedData === undefined) {
-    return (
-      <SafeAreaView style={styles.center}>
-        <ActivityIndicator color={C.gold} size="large" />
-      </SafeAreaView>
-    );
-  }
-
-  const activityMap = new Map(feedData?.activities.map((a) => [a._id, a]) ?? []);
-  const userMap = new Map(feedData?.users.map((u) => [u._id, u]) ?? []);
-  const logs = feedData?.logs ?? [];
-  const rounds = feedData?.rounds ?? [];
-  const selectedRound = feedData?.selectedRound ?? null;
-
   // Build chart data: current user's coins (weight + cardio) per round, sorted by creation time
+  // Must be before any early returns to satisfy Rules of Hooks
   const myChartData = useMemo(() => {
     if (!progressData || !me) return [];
     const myId = String(me._id);
@@ -68,6 +55,20 @@ export default function HistoryScreen() {
       };
     });
   }, [progressData, me]);
+
+  if (feedData === undefined) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <ActivityIndicator color={C.gold} size="large" />
+      </SafeAreaView>
+    );
+  }
+
+  const activityMap = new Map(feedData?.activities.map((a) => [a._id, a]) ?? []);
+  const userMap = new Map(feedData?.users.map((u) => [u._id, u]) ?? []);
+  const logs = feedData?.logs ?? [];
+  const rounds = feedData?.rounds ?? [];
+  const selectedRound = feedData?.selectedRound ?? null;
 
   return (
     <SafeAreaView style={styles.safe}>
