@@ -1,5 +1,7 @@
+import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useQuery } from "convex/react";
 import { Redirect, Tabs } from "expo-router";
+import { useEffect } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { api } from "../../convex/_generated/api";
 
@@ -8,10 +10,18 @@ const INACTIVE = "#9CA3AF";
 
 export default function AppLayout() {
   const { isAuthenticated, isLoading } = useConvexAuth();
+  const { signOut } = useAuthActions();
   const user = useQuery(
     api.users.getCurrentUser,
     isAuthenticated ? {} : "skip"
   );
+
+  // Client has a token but server can't resolve the session → sign out to reset
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user === null) {
+      signOut().catch(console.error);
+    }
+  }, [isLoading, isAuthenticated, user, signOut]);
 
   // Loading: auth state resolving or user record loading
   if (isLoading || (isAuthenticated && user === undefined)) {
