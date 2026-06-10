@@ -10,11 +10,14 @@
     "scheme": "buffit",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.buffit.app",
-      "buildNumber": "1"
+      "bundleIdentifier": "com.thuwanon.buffit",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.buffit.app",
+      "package": "com.thuwanon.buffit",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#D99B00",
