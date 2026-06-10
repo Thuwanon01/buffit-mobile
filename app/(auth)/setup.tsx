@@ -59,6 +59,7 @@ export default function SetupScreen() {
     try {
       await createOrUpdateProfile({
         name,
+        email: user?.email ?? "",
         age: age ? Number(age) : undefined,
         gender: gender || undefined,
         weightKg: weightKg ? Number(weightKg) : undefined,
