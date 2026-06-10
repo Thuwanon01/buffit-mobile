@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import {
   ActivityIndicator,
-  Dimensions,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -10,12 +9,9 @@ import {
   Text,
   View,
 } from "react-native";
-import { VictoryBar, VictoryChart, VictoryAxis, VictoryGroup } from "victory-native";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Card, RoundPicker } from "../../src/components/ui";
-
-const CHART_WIDTH = Dimensions.get("window").width - 32;
 
 const C = {
   gold: "#D99B00",
@@ -28,6 +24,40 @@ const C = {
 } satisfies Record<string, string>;
 
 type Tab = "feed" | "chart";
+
+type ChartPoint = { x: number; label: string; weight: number; cardio: number };
+
+const CHART_BAR_MAX_HEIGHT = 160;
+
+function BarChart({ data }: { data: ChartPoint[] }) {
+  const maxValue = Math.max(1, ...data.flatMap((d) => [d.weight, d.cardio]));
+
+  return (
+    <View style={styles.chart}>
+      <View style={styles.chartBars}>
+        {data.map((d, i) => (
+          <View key={i} style={styles.chartBarGroup}>
+            <View style={styles.chartBarPair}>
+              <View
+                style={[
+                  styles.chartBar,
+                  { height: Math.max(2, (d.weight / maxValue) * CHART_BAR_MAX_HEIGHT), backgroundColor: C.gold },
+                ]}
+              />
+              <View
+                style={[
+                  styles.chartBar,
+                  { height: Math.max(2, (d.cardio / maxValue) * CHART_BAR_MAX_HEIGHT), backgroundColor: C.red },
+                ]}
+              />
+            </View>
+            <Text style={styles.chartBarLabel} numberOfLines={1}>{d.label}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
 
 export default function HistoryScreen() {
   const [tab, setTab] = useState<Tab>("feed");
@@ -112,44 +142,7 @@ export default function HistoryScreen() {
                 </View>
               </View>
 
-              <VictoryChart
-                width={CHART_WIDTH}
-                height={240}
-                domainPadding={{ x: 20 }}
-                padding={{ top: 10, bottom: 50, left: 40, right: 16 }}
-              >
-                <VictoryAxis
-                  tickValues={myChartData.map((d) => d.x)}
-                  tickFormat={(x: number) => myChartData[x - 1]?.label ?? ""}
-                  style={{
-                    axis: { stroke: C.border },
-                    tickLabels: { fontSize: 9, fill: C.muted, angle: -20, textAnchor: "end" },
-                    grid: { stroke: "transparent" },
-                  }}
-                />
-                <VictoryAxis
-                  dependentAxis
-                  style={{
-                    axis: { stroke: "transparent" },
-                    tickLabels: { fontSize: 9, fill: C.muted },
-                    grid: { stroke: C.border, strokeDasharray: "3,3" },
-                  }}
-                />
-                <VictoryGroup offset={10}>
-                  <VictoryBar
-                    data={myChartData.map((d) => ({ x: d.x, y: d.weight }))}
-                    style={{ data: { fill: C.gold, borderRadius: 4 } }}
-                    barWidth={9}
-                    cornerRadius={{ top: 3 }}
-                  />
-                  <VictoryBar
-                    data={myChartData.map((d) => ({ x: d.x, y: d.cardio }))}
-                    style={{ data: { fill: C.red } }}
-                    barWidth={9}
-                    cornerRadius={{ top: 3 }}
-                  />
-                </VictoryGroup>
-              </VictoryChart>
+              <BarChart data={myChartData} />
 
               {/* Round-by-round breakdown */}
               {myChartData.filter((d) => d.weight > 0 || d.cardio > 0).map((d, i) => (
@@ -255,6 +248,13 @@ const styles = StyleSheet.create({
   legendItem: { flexDirection: "row", alignItems: "center", gap: 5 },
   legendDot: { width: 9, height: 9, borderRadius: 99 },
   legendLabel: { fontSize: 11, color: C.muted, fontWeight: "600" },
+
+  chart: { paddingTop: 12, paddingBottom: 4 },
+  chartBars: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-around", height: CHART_BAR_MAX_HEIGHT + 30 },
+  chartBarGroup: { flex: 1, alignItems: "center" },
+  chartBarPair: { flexDirection: "row", alignItems: "flex-end", gap: 3, height: CHART_BAR_MAX_HEIGHT },
+  chartBar: { width: 9, borderTopLeftRadius: 3, borderTopRightRadius: 3 },
+  chartBarLabel: { fontSize: 9, color: C.muted, marginTop: 6, maxWidth: 48 },
 
   roundRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 5, borderTopWidth: 1, borderTopColor: "#F0F0F8" },
   roundName: { flex: 1, fontSize: 12, color: C.dark, fontWeight: "600" },
