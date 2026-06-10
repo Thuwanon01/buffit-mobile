@@ -20,7 +20,7 @@
       "package": "com.thuwanon.buffit",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#D99B00",
+        "backgroundColor": "#BF0E13",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
