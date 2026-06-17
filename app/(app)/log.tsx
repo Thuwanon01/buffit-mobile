@@ -117,7 +117,7 @@ export default function LogScreen() {
   const numericValue = metricValue === "" ? null : Number(metricValue);
   const liveCoins =
     criteria && numericValue !== null && !Number.isNaN(numericValue) && numericValue > 0
-      ? Math.round((numericValue / criteria.value) * (selectedActivityData?.weightMultiplier ?? 1) * 10) / 10
+      ? Math.round((numericValue / criteria.value) * (selectedActivityData?.weightMultiplier ?? 1) * 100) / 100
       : null;
   const isWeightAct = selectedActivityData?.category === "weight";
   const accentColor = isWeightAct ? C.gold : C.red;
@@ -138,7 +138,7 @@ export default function LogScreen() {
       setLogStage({
         stage: "success",
         isWeight: !!isWeightAct,
-        coinAmt: (liveCoins ?? selectedActivityData?.weightMultiplier ?? 1).toFixed(1),
+        coinAmt: (liveCoins ?? selectedActivityData?.weightMultiplier ?? 1).toFixed(2),
       });
     } catch (err) {
       Toast.show({ type: "error", text1: "เกิดข้อผิดพลาด", text2: err instanceof Error ? err.message : "ลองใหม่อีกครั้ง" });
@@ -547,7 +547,7 @@ export default function LogScreen() {
                 />
                 {liveCoins !== null && (
                   <Text style={[styles.belowMinText, { color: accentColor }]}>
-                    🪙 จะได้ {liveCoins.toFixed(1)} coin
+                    🪙 จะได้ {liveCoins.toFixed(2)} coin
                   </Text>
                 )}
 
