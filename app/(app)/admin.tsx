@@ -281,11 +281,11 @@ function UsersTab() {
           </View>
           <View style={{ flexDirection: "row", gap: 7 }}>
             <View style={styles.coinBadge}>
-              <Text style={[styles.coinValue, { color: C.gold }]}>{(u.lifetimeWeightCoins ?? 0).toFixed(1)}</Text>
+              <Text style={[styles.coinValue, { color: C.gold }]}>{(u.lifetimeWeightCoins ?? 0).toFixed(2)}</Text>
               <Text style={styles.coinLabel}> W</Text>
             </View>
             <View style={[styles.coinBadge, { backgroundColor: "rgba(240,62,85,0.12)" }]}>
-              <Text style={[styles.coinValue, { color: C.red }]}>{(u.lifetimeCardioCoins ?? 0).toFixed(1)}</Text>
+              <Text style={[styles.coinValue, { color: C.red }]}>{(u.lifetimeCardioCoins ?? 0).toFixed(2)}</Text>
               <Text style={styles.coinLabel}> C</Text>
             </View>
           </View>
@@ -304,7 +304,7 @@ function UsersTab() {
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={styles.logUser}>{logUser?.name} — {activity?.name}</Text>
                   <Text style={styles.logDetail}>
-                    {log.metrics.value} {log.metrics.unit} → {log.coinsEarned.toFixed(1)} coin
+                    {log.metrics.value} {log.metrics.unit} → {log.coinsEarned.toFixed(2)} coin
                     {log.status === "revoked" && <Text style={{ color: C.red }}> (revoked)</Text>}
                   </Text>
                   {isRevoking && (

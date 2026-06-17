@@ -133,7 +133,7 @@ export default function LeaderboardScreen() {
                 </View>
 
                 <View style={styles.totalCoins}>
-                  <Text style={styles.totalCoinsValue}>{entry.totalCoins.toFixed(1)}</Text>
+                  <Text style={styles.totalCoinsValue}>{entry.totalCoins.toFixed(2)}</Text>
                   <Text style={styles.totalCoinsLabel}>coins</Text>
                 </View>
               </View>
@@ -149,7 +149,7 @@ export default function LeaderboardScreen() {
                       <View style={[styles.miniFill, { width: `${bar.pct}%`, backgroundColor: bar.color }]} />
                     </View>
                     <Text style={[styles.miniValue, { color: bar.color }]}>
-                      {bar.val.toFixed(1)}/{bar.max}
+                      {bar.val.toFixed(2)}/{bar.max}
                     </Text>
                   </View>
                 ))}

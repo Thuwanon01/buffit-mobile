@@ -46,7 +46,7 @@ export function CoinProgressRow({
       <View style={styles.coinRowHeader}>
         <Text style={styles.coinRowLabel}>{emoji} {label}</Text>
         <Text style={[styles.coinRowValue, { color }]}>
-          {value.toFixed(1)}
+          {value.toFixed(2)}
           <Text style={styles.coinRowMax}> / {max}</Text>
         </Text>
       </View>

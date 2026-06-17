@@ -20,7 +20,7 @@ export function calculateCoinsEarned(
   criteriaValue: number,
   multiplier: number
 ): number {
-  return Math.round((metricsValue / criteriaValue) * multiplier * 100) / 100;
+  return (metricsValue / criteriaValue) * multiplier;
 }
 
 // Applies a delta to a coin total, flooring at 0 (revoke can never produce negative coins).

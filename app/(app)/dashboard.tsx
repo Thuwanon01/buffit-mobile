@@ -101,8 +101,8 @@ export default function DashboardScreen() {
               </View>
               <Text style={styles.xpLabel}>
                 {levelProgress.nextLevel != null
-                  ? `${levelProgress.total.toFixed(1)} 🪙 • อีก ${levelProgress.coinsToNext?.toFixed(1)} ถึง Lv.${levelProgress.nextLevel}`
-                  : `${levelProgress.total.toFixed(1)} 🪙 • เลเวลสูงสุด 🏆`}
+                  ? `${levelProgress.total.toFixed(2)} 🪙 • อีก ${levelProgress.coinsToNext?.toFixed(2)} ถึง Lv.${levelProgress.nextLevel}`
+                  : `${levelProgress.total.toFixed(2)} 🪙 • เลเวลสูงสุด 🏆`}
               </Text>
             </View>
           )}
@@ -180,11 +180,11 @@ export default function DashboardScreen() {
                 <View style={styles.shortfall}>
                   <Text style={styles.shortfallText}>⚡ ทีมขาดอีก{" "}
                     <Text style={{ color: C.gold, fontWeight: "700" }}>
-                      {Math.max(0, leaderboard.group.groupWeightTarget - leaderboard.group.totalWeightCoins).toFixed(1)}W
+                      {Math.max(0, leaderboard.group.groupWeightTarget - leaderboard.group.totalWeightCoins).toFixed(2)}W
                     </Text>
                     {" + "}
                     <Text style={{ color: C.red, fontWeight: "700" }}>
-                      {Math.max(0, leaderboard.group.groupCardioTarget - leaderboard.group.totalCardioCoins).toFixed(1)}C
+                      {Math.max(0, leaderboard.group.groupCardioTarget - leaderboard.group.totalCardioCoins).toFixed(2)}C
                     </Text>
                     {" ก็ได้ไปกิน!"}
                   </Text>

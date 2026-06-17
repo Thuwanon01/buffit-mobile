@@ -36,7 +36,7 @@ export const notifyCoinEarned = internalAction({
 
     const emoji = coinType === "weight" ? "💪" : "🏃";
     const coinLabel = coinType === "weight" ? "Weight Coin" : "Cardio Coin";
-    const msg = `${emoji} ${user.name} ได้ ${coinsEarned.toFixed(1)} ${coinLabel} จากการทำ ${activityName}!`;
+    const msg = `${emoji} ${user.name} ได้ ${coinsEarned.toFixed(2)} ${coinLabel} จากการทำ ${activityName}!`;
 
     await sendLineMessage(settings.lineGroupId, settings.lineChannelAccessToken, msg);
   },
@@ -108,10 +108,10 @@ export const sendDailyProgress = internalAction({
         ``,
         ...entries.map(
           (e, i) =>
-            `${i + 1}. ${e.name} (Lv.${e.level}) — 💪${e.weightCoins.toFixed(1)}/${e.weightTarget} | 🏃${e.cardioCoins.toFixed(1)}/${e.cardioTarget}`
+            `${i + 1}. ${e.name} (Lv.${e.level}) — 💪${e.weightCoins.toFixed(2)}/${e.weightTarget} | 🏃${e.cardioCoins.toFixed(2)}/${e.cardioTarget}`
         ),
         ``,
-        `🏆 ทีม: 💪${group.totalWeightCoins.toFixed(1)}/${group.groupWeightTarget} | 🏃${group.totalCardioCoins.toFixed(1)}/${group.groupCardioTarget}`,
+        `🏆 ทีม: 💪${group.totalWeightCoins.toFixed(2)}/${group.groupWeightTarget} | 🏃${group.totalCardioCoins.toFixed(2)}/${group.groupCardioTarget}`,
         group.goalReached ? `✅ ถึงเป้าหมายแล้ว!` : `⏳ ยังไม่ถึงเป้า มาลุยกัน!`,
       ];
 

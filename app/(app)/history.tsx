@@ -148,8 +148,8 @@ export default function HistoryScreen() {
               {myChartData.filter((d) => d.weight > 0 || d.cardio > 0).map((d, i) => (
                 <View key={i} style={styles.roundRow}>
                   <Text style={styles.roundName} numberOfLines={1}>{d.label}</Text>
-                  <Text style={[styles.roundStat, { color: C.gold }]}>💪 {d.weight.toFixed(1)}</Text>
-                  <Text style={[styles.roundStat, { color: C.red }]}>🏃 {d.cardio.toFixed(1)}</Text>
+                  <Text style={[styles.roundStat, { color: C.gold }]}>💪 {d.weight.toFixed(2)}</Text>
+                  <Text style={[styles.roundStat, { color: C.red }]}>🏃 {d.cardio.toFixed(2)}</Text>
                 </View>
               ))}
             </View>
@@ -201,7 +201,7 @@ export default function HistoryScreen() {
 
                       <View style={styles.logRight}>
                         <Text style={[styles.logCoins, { color: coinColor }]}>
-                          +{log.coinsEarned.toFixed(1)}
+                          +{log.coinsEarned.toFixed(2)}
                         </Text>
                         <Text style={styles.logDate}>{dateStr}</Text>
                       </View>

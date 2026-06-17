@@ -117,7 +117,7 @@ export default function LogScreen() {
   const numericValue = metricValue === "" ? null : Number(metricValue);
   const liveCoins =
     criteria && numericValue !== null && !Number.isNaN(numericValue) && numericValue > 0
-      ? Math.round((numericValue / criteria.value) * (selectedActivityData?.weightMultiplier ?? 1) * 100) / 100
+      ? (numericValue / criteria.value) * (selectedActivityData?.weightMultiplier ?? 1)
       : null;
   const isWeightAct = selectedActivityData?.category === "weight";
   const accentColor = isWeightAct ? C.gold : C.red;
@@ -342,7 +342,7 @@ export default function LogScreen() {
               {result.logged.map((item, i) => (
                 <View key={i} style={styles.resultRow}>
                   <Text style={styles.resultName}>{item.name}</Text>
-                  <Text style={styles.resultCoins}>+{item.coinsEarned.toFixed(1)} 🪙</Text>
+                  <Text style={styles.resultCoins}>+{item.coinsEarned.toFixed(2)} 🪙</Text>
                 </View>
               ))}
             </Card>
@@ -490,7 +490,7 @@ export default function LogScreen() {
                     <Text style={[styles.activityName, sel && { color: C.gold, fontWeight: "700" }]}>
                       {a.name}
                     </Text>
-                    <Text style={styles.activityMultiplier}>{a.weightMultiplier.toFixed(1)} 🪙</Text>
+                    <Text style={styles.activityMultiplier}>{a.weightMultiplier.toFixed(2)} 🪙</Text>
                   </Pressable>
                 );
               })}
@@ -518,7 +518,7 @@ export default function LogScreen() {
                     <Text style={[styles.activityName, sel && { color: C.red, fontWeight: "700" }]}>
                       {a.name}
                     </Text>
-                    <Text style={styles.activityMultiplier}>{a.weightMultiplier.toFixed(1)} 🪙</Text>
+                    <Text style={styles.activityMultiplier}>{a.weightMultiplier.toFixed(2)} 🪙</Text>
                   </Pressable>
                 );
               })}
@@ -532,7 +532,7 @@ export default function LogScreen() {
                 <Text style={styles.metricActName}>{selectedActivityData.name}</Text>
                 <View style={styles.metricGoalBadge}>
                   <Text style={styles.metricGoalText}>
-                    📊 ตัวอย่าง Lv.{user?.level}: {criteria.value} {criteria.unit} = {selectedActivityData.weightMultiplier.toFixed(1)} coin
+                    📊 ตัวอย่าง Lv.{user?.level}: {criteria.value} {criteria.unit} = {selectedActivityData.weightMultiplier.toFixed(2)} coin
                   </Text>
                 </View>
 
