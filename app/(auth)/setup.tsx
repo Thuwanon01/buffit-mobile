@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -35,6 +35,7 @@ export default function SetupScreen() {
   const router = useRouter();
 
   const [name, setName] = useState("");
+  const [nameInitialized, setNameInitialized] = useState(false);
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [weightKg, setWeightKg] = useState("");
@@ -44,6 +45,13 @@ export default function SetupScreen() {
   const [goals, setGoals] = useState<string[]>([]);
   const [medicalConditions, setMedicalConditions] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user?.name && !nameInitialized) {
+      setName(user.name);
+      setNameInitialized(true);
+    }
+  }, [user?.name, nameInitialized]);
 
   if (user === undefined) {
     return (
