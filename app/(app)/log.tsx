@@ -115,18 +115,17 @@ export default function LogScreen() {
     ) ?? selectedActivityData?.criteriaPerLevel[0];
 
   const numericValue = metricValue === "" ? null : Number(metricValue);
-  const belowMin =
-    !!criteria &&
-    numericValue !== null &&
-    !Number.isNaN(numericValue) &&
-    numericValue < criteria.value;
+  const liveCoins =
+    criteria && numericValue !== null && !Number.isNaN(numericValue) && numericValue > 0
+      ? Math.round((numericValue / criteria.value) * (selectedActivityData?.weightMultiplier ?? 1) * 10) / 10
+      : null;
   const isWeightAct = selectedActivityData?.category === "weight";
   const accentColor = isWeightAct ? C.gold : C.red;
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
   async function handleSubmit() {
-    if (!activeRound || !selectedActivity || !metricValue || belowMin) return;
+    if (!activeRound || !selectedActivity || !metricValue) return;
     setLoading(true);
     try {
       await logWorkout({
@@ -139,7 +138,7 @@ export default function LogScreen() {
       setLogStage({
         stage: "success",
         isWeight: !!isWeightAct,
-        coinAmt: selectedActivityData?.weightMultiplier.toFixed(1) ?? "1.0",
+        coinAmt: (liveCoins ?? selectedActivityData?.weightMultiplier ?? 1).toFixed(1),
       });
     } catch (err) {
       Toast.show({ type: "error", text1: "เกิดข้อผิดพลาด", text2: err instanceof Error ? err.message : "ลองใหม่อีกครั้ง" });
@@ -533,22 +532,22 @@ export default function LogScreen() {
                 <Text style={styles.metricActName}>{selectedActivityData.name}</Text>
                 <View style={styles.metricGoalBadge}>
                   <Text style={styles.metricGoalText}>
-                    🎯 เป้า Lv.{user?.level}: ≥ {criteria.value} {criteria.unit} → {selectedActivityData.weightMultiplier.toFixed(1)} coin
+                    📊 ตัวอย่าง Lv.{user?.level}: {criteria.value} {criteria.unit} = {selectedActivityData.weightMultiplier.toFixed(1)} coin
                   </Text>
                 </View>
 
                 <Text style={styles.inputLabel}>{criteria.metric || criteria.unit}</Text>
                 <TextInput
-                  style={[styles.metricInput, belowMin && { borderColor: C.red, color: C.red }]}
+                  style={styles.metricInput}
                   placeholder={`กรอก ${criteria.unit}...`}
                   placeholderTextColor="#AAAACC"
                   value={metricValue}
                   onChangeText={setMetricValue}
                   keyboardType="decimal-pad"
                 />
-                {belowMin && (
-                  <Text style={styles.belowMinText}>
-                    ⚠️ ต้องมากกว่าหรือเท่ากับ {criteria.value} {criteria.unit}
+                {liveCoins !== null && (
+                  <Text style={[styles.belowMinText, { color: accentColor }]}>
+                    🪙 จะได้ {liveCoins.toFixed(1)} coin
                   </Text>
                 )}
 
@@ -564,17 +563,17 @@ export default function LogScreen() {
                 />
 
                 <Pressable
-                  disabled={loading || !metricValue || belowMin}
+                  disabled={loading || !metricValue}
                   onPress={handleSubmit}
                   style={[
                     styles.btn,
-                    { backgroundColor: loading || !metricValue || belowMin ? "#E0E1EF" : accentColor },
+                    { backgroundColor: loading || !metricValue ? "#E0E1EF" : accentColor },
                   ]}
                 >
                   {loading ? (
                     <ActivityIndicator color={C.dark} />
                   ) : (
-                    <Text style={[styles.btnText, { color: !metricValue || belowMin ? C.muted : C.dark }]}>
+                    <Text style={[styles.btnText, { color: !metricValue ? C.muted : C.dark }]}>
                       บันทึก {isWeightAct ? "💪" : "🏃"}
                     </Text>
                   )}

@@ -26,9 +26,6 @@ export const logWorkout = mutation({
     if (!round.participantIds.includes(user._id)) throw new Error("Not a participant");
 
     const criteria = findCriteriaForLevel(activity.criteriaPerLevel, user.level);
-    if (args.metrics.value < criteria.value) throw new Error(
-      `Need ${criteria.value} ${criteria.unit} to earn a coin at your level (Level ${user.level})`
-    );
     const coinsEarned = calculateCoinsEarned(args.metrics.value, criteria.value, activity.weightMultiplier);
 
     const logId = await ctx.db.insert("workoutLogs", {
@@ -148,16 +145,6 @@ export const confirmAutoLog = mutation({
       }
 
       const criteria = findCriteriaForLevel(activity.criteriaPerLevel, user.level);
-      if (entry.value < criteria.value) {
-        skipped.push({
-          name: activity.name,
-          value: entry.value,
-          unit: entry.unit,
-          reason: `ต้องมากกว่าหรือเท่ากับ ${criteria.value} ${criteria.unit} ถึงจะได้ coin (เป้า Lv.${user.level})`,
-        });
-        continue;
-      }
-
       const coinsEarned = calculateCoinsEarned(entry.value, criteria.value, activity.weightMultiplier);
       await ctx.db.insert("workoutLogs", {
         userId: user._id,
