@@ -15,10 +15,13 @@ export default function AuthLayout() {
     );
   }
 
-  // Only bounce to the app if the profile is complete — otherwise let the
-  // (app) layout's redirect to /(auth)/setup land here without looping back.
-  if (isAuthenticated && user?.profileCompleted) {
-    return <Redirect href="/(app)/dashboard" />;
+  if (isAuthenticated && user !== undefined) {
+    if (user?.profileCompleted) {
+      return <Redirect href="/(app)/dashboard" />;
+    }
+    if (user !== null) {
+      return <Redirect href="/(auth)/setup" />;
+    }
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;
