@@ -28,10 +28,10 @@ export const notifyCoinEarned = internalAction({
     coinType: v.string(),
   },
   handler: async (ctx, { userId, activityName, coinsEarned, coinType }) => {
-    const settings = await ctx.runQuery(api.adminSettings.getSettings);
+    const settings = await ctx.runQuery(internal.adminSettings.getSettingsInternal);
     if (!settings?.lineChannelAccessToken || !settings?.lineGroupId) return;
 
-    const user = await ctx.runQuery(api.users.getUserById, { id: userId });
+    const user = await ctx.runQuery(internal.users.getUserByIdInternal, { id: userId });
     if (!user) return;
 
     const emoji = coinType === "weight" ? "💪" : "🏃";
@@ -45,7 +45,7 @@ export const notifyCoinEarned = internalAction({
 export const notifyGoalReached = internalAction({
   args: { roundId: v.id("rounds") },
   handler: async (ctx, { roundId }) => {
-    const settings = await ctx.runQuery(api.adminSettings.getSettings);
+    const settings = await ctx.runQuery(internal.adminSettings.getSettingsInternal);
     if (!settings?.lineChannelAccessToken || !settings?.lineGroupId) return;
 
     const round = await ctx.runQuery(api.rounds.getRoundById, { id: roundId });
@@ -59,7 +59,7 @@ export const notifyGoalReached = internalAction({
 export const notifyNewRound = internalAction({
   args: { roundId: v.id("rounds") },
   handler: async (ctx, { roundId }) => {
-    const settings = await ctx.runQuery(api.adminSettings.getSettings);
+    const settings = await ctx.runQuery(internal.adminSettings.getSettingsInternal);
     if (!settings?.lineChannelAccessToken || !settings?.lineGroupId) return;
 
     const round = await ctx.runQuery(api.rounds.getRoundById, { id: roundId });
@@ -73,7 +73,7 @@ export const notifyNewRound = internalAction({
 export const broadcastMessage = action({
   args: { message: v.string() },
   handler: async (ctx, { message }) => {
-    const settings = await ctx.runQuery(api.adminSettings.getSettings);
+    const settings = await ctx.runQuery(internal.adminSettings.getSettingsInternal);
     if (!settings?.lineChannelAccessToken || !settings?.lineGroupId) {
       throw new Error("LINE not configured");
     }
@@ -84,14 +84,14 @@ export const broadcastMessage = action({
 export const sendDailyProgress = internalAction({
   args: {},
   handler: async (ctx) => {
-    const settings = await ctx.runQuery(api.adminSettings.getSettings);
+    const settings = await ctx.runQuery(internal.adminSettings.getSettingsInternal);
     if (!settings?.lineChannelAccessToken || !settings?.lineGroupId) return;
 
-    const activeRounds = await ctx.runQuery(api.rounds.getActiveRounds);
+    const activeRounds = await ctx.runQuery(api.rounds.getActiveRounds, {});
     if (activeRounds.length === 0) return;
 
     // Pending buffet rights: completed rounds where buffetDate not yet passed
-    const allRounds = await ctx.runQuery(api.rounds.getAllRounds);
+    const allRounds = await ctx.runQuery(api.rounds.getAllRounds, {});
     const pendingBuffets = allRounds.filter(
       (r) => r.status === "completed" && (!r.buffetDate || r.buffetDate > Date.now())
     );
@@ -127,10 +127,10 @@ export const sendDailyProgress = internalAction({
 export const notifyMilestone = internalAction({
   args: { userId: v.id("users"), newLevel: v.number() },
   handler: async (ctx, { userId, newLevel }) => {
-    const settings = await ctx.runQuery(api.adminSettings.getSettings);
+    const settings = await ctx.runQuery(internal.adminSettings.getSettingsInternal);
     if (!settings?.lineChannelAccessToken || !settings?.lineGroupId) return;
 
-    const user = await ctx.runQuery(api.users.getUserById, { id: userId });
+    const user = await ctx.runQuery(internal.users.getUserByIdInternal, { id: userId });
     if (!user) return;
 
     const msg = `🎉 ${user.name} ขึ้น Level ${newLevel}! 🏆 ยอดเยี่ยมมาก!`;

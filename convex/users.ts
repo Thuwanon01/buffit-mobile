@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query, internalMutation, QueryCtx } from "./_generated/server";
+import { mutation, query, internalMutation, internalQuery, QueryCtx } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { internal } from "./_generated/api";
 import { Doc } from "./_generated/dataModel";
@@ -75,7 +75,11 @@ export const getCurrentUser = query({
   },
 });
 
-export const getUserById = query({
+// Internal only: returns the full user document (email, medical data, body
+// metrics). Callable solely by trusted server code (LINE / AI actions). It was
+// previously a public `query`, which let any client read any user's private
+// profile by id (IDOR).
+export const getUserByIdInternal = internalQuery({
   args: { id: v.id("users") },
   handler: async (ctx, { id }) => ctx.db.get(id),
 });
@@ -85,7 +89,9 @@ export const getAllUsers = query({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
-    return ctx.db.query("users").collect();
+    const caller = await ctx.db.get(userId);
+    if (!caller?.isAdmin) return [];
+    return ctx.db.query("users").take(500);
   },
 });
 

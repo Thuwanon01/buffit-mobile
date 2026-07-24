@@ -53,7 +53,7 @@ export function DashboardScreen() {
               <View
                 style={[
                   styles.barFill,
-                  { width: `${Math.round(levelProgress.progressPercent * 100)}%` as any },
+                  { width: `${Math.round(levelProgress.progress * 100)}%` as any },
                 ]}
               />
             </View>

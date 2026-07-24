@@ -11,6 +11,9 @@
     "jsx": "react-jsx",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
+    /* Convex functions read process.env (SITE_URL, GEMINI_API_KEY, ...). The
+     * mobile root tsconfig restricts `types`, so name it explicitly here. */
+    "types": ["node"],
 
     /* These compiler options are required by Convex */
     "target": "ESNext",

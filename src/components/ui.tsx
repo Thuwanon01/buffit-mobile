@@ -132,7 +132,7 @@ export function Card({
 
 // ─── SectionLabel ─────────────────────────────────────────────────────────────
 
-export function SectionLabel({ children }: { children: string }) {
+export function SectionLabel({ children }: { children: React.ReactNode }) {
   return <Text style={styles.sectionLabel}>{children}</Text>;
 }
 

@@ -72,7 +72,7 @@ export default function LogScreen() {
   const router = useRouter();
 
   const user = useQuery(api.users.getCurrentUser);
-  const activeRounds = useQuery(api.rounds.getActiveRounds);
+  const activeRounds = useQuery(api.rounds.getActiveRounds, {});
   const activities = useQuery(api.activityTypes.getApprovedActivities);
 
   const logWorkout = useMutation(api.workoutLogs.logWorkout);
@@ -126,13 +126,20 @@ export default function LogScreen() {
 
   async function handleSubmit() {
     if (!activeRound || !selectedActivity || !metricValue) return;
+    // Reject unparseable input (e.g. "." or "1.2.3" from the decimal keypad).
+    // Number(".") is NaN, which would otherwise be stored as NaN coins and
+    // poison every downstream total.
+    if (numericValue === null || !Number.isFinite(numericValue) || numericValue <= 0) {
+      Toast.show({ type: "error", text1: "ค่าไม่ถูกต้อง", text2: "กรุณากรอกตัวเลขมากกว่า 0" });
+      return;
+    }
     setLoading(true);
     try {
       await logWorkout({
         roundId: activeRound._id,
         activityTypeId: selectedActivity,
         date: Date.now(),
-        metrics: { value: Number(metricValue), unit: criteria?.unit ?? "reps" },
+        metrics: { value: numericValue, unit: criteria?.unit ?? "reps" },
         note: note || undefined,
       });
       setLogStage({

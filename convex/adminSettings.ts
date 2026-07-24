@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalQuery } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
 async function requireAdmin(ctx: any) {
@@ -10,9 +10,26 @@ async function requireAdmin(ctx: any) {
   return user;
 }
 
-export const getSettings = query({
+// Full settings row (includes the LINE channel access token). For system
+// callers only (cron / LINE actions) — NOT exposed to clients.
+export const getSettingsInternal = internalQuery({
   args: {},
   handler: async (ctx) => ctx.db.query("adminSettings").first(),
+});
+
+// Public query is admin-gated: the row contains the LINE channel access token,
+// so it must never be readable by unauthenticated or non-admin callers. Returns
+// null (rather than throwing) for non-admins so the client stays in a normal
+// loaded state.
+export const getSettings = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+    const user = await ctx.db.get(userId);
+    if (!user?.isAdmin) return null;
+    return ctx.db.query("adminSettings").first();
+  },
 });
 
 export const upsertSettings = mutation({

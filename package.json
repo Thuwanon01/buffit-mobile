@@ -23,6 +23,8 @@
     "react-native-view-shot": "^5.1.0"
   },
   "devDependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@types/node": "^20.19.43",
     "@types/react": "~19.2.2",
     "typescript": "~6.0.3"
   },

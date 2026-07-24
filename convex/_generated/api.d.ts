@@ -18,6 +18,7 @@ import type * as cronHandlers from "../cronHandlers.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as defaultActivities from "../defaultActivities.js";
+import type * as groups from "../groups.js";
 import type * as http from "../http.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as line from "../line.js";
@@ -45,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   dashboard: typeof dashboard;
   defaultActivities: typeof defaultActivities;
+  groups: typeof groups;
   http: typeof http;
   leaderboard: typeof leaderboard;
   line: typeof line;

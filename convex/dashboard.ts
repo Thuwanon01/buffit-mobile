@@ -9,16 +9,26 @@ export const getDashboardPage = query({
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
 
-    const [user, allActive] = await Promise.all([
-      ctx.db.get(userId),
-      ctx.db
-        .query("rounds")
-        .withIndex("by_status", (q) => q.eq("status", "active"))
-        .collect(),
-    ]);
+    const user = await ctx.db.get(userId);
     if (!user) return null;
 
     const levelProgress = await computeLevelProgress(ctx, user);
+
+    // Groups for group-selector chip row
+    const memberships = await ctx.db
+      .query("groupMembers")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .collect();
+    const groupDocs = await Promise.all(memberships.map((m) => ctx.db.get(m.groupId)));
+    const myGroups = groupDocs
+      .filter(Boolean)
+      .map((g) => ({ _id: g!._id, name: g!.name }));
+
+    const allActive = await ctx.db
+      .query("rounds")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .collect();
+
     const myRounds = allActive.filter((r) => r.participantIds.includes(userId));
     const hasAnyActiveRounds = allActive.length > 0;
 
@@ -32,6 +42,7 @@ export const getDashboardPage = query({
         user: { _id: user._id, name: user.name, level: user.level, avatarUrl: user.avatarUrl },
         levelProgress,
         myRounds,
+        myGroups,
         hasAnyActiveRounds,
         selectedRound: null,
         leaderboard: null,
@@ -82,6 +93,7 @@ export const getDashboardPage = query({
       user: { _id: user._id, name: user.name, level: user.level, avatarUrl: user.avatarUrl },
       levelProgress,
       myRounds,
+      myGroups,
       hasAnyActiveRounds,
       selectedRound: round,
       leaderboard: {

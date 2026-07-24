@@ -5,6 +5,10 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 export const getRecentNotifications = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, { limit = 50 }) => {
+    // Notifications contain member names and activity; require authentication
+    // so the feed is not readable by anonymous callers.
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
     return ctx.db
       .query("notifications")
       .withIndex("by_sentAt")

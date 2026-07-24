@@ -31,7 +31,7 @@ const C = {
 export default function DashboardScreen() {
   const router = useRouter();
   const [selectedRoundId, setSelectedRoundId] = useState<Id<"rounds"> | null>(null);
-  const shareRef = useRef<ViewShot>(null);
+  const shareRef = useRef<React.ElementRef<typeof ViewShot>>(null);
 
   async function handleShare() {
     try {

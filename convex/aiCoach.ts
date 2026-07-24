@@ -6,7 +6,7 @@ import { Id } from "./_generated/dataModel";
 export const generateLevelThresholds = internalAction({
   args: { userId: v.id("users") },
   handler: async (ctx, { userId }) => {
-    const user = await ctx.runQuery(api.users.getUserById, { id: userId });
+    const user = await ctx.runQuery(internal.users.getUserByIdInternal, { id: userId });
     if (!user) return;
 
     const apiKey = process.env.GEMINI_API_KEY;

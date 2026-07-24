@@ -29,7 +29,7 @@ const C = {
 type AdminTab = "round" | "users";
 
 function RoundTab() {
-  const activeRounds = useQuery(api.rounds.getActiveRounds);
+  const activeRounds = useQuery(api.rounds.getActiveRounds, {});
   const allUsers = useQuery(api.users.getAllUsers);
   const createRound = useMutation(api.rounds.createRound);
   const closeRound = useMutation(api.rounds.closeRound);

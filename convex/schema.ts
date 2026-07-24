@@ -42,6 +42,37 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("email", ["email"]),
 
+  groups: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+  }),
+
+  groupMembers: defineTable({
+    groupId: v.id("groups"),
+    userId: v.id("users"),
+    role: v.string(), // owner | member
+    joinedAt: v.number(),
+  })
+    .index("by_groupId", ["groupId"])
+    .index("by_userId", ["userId"])
+    .index("by_groupId_and_userId", ["groupId", "userId"]),
+
+  groupInvites: defineTable({
+    groupId: v.id("groups"),
+    type: v.string(), // link | direct
+    code: v.optional(v.string()), // for link invites
+    targetUserId: v.optional(v.id("users")), // for direct invites
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+    expiresAt: v.optional(v.number()),
+    status: v.string(), // pending | accepted | declined | expired
+  })
+    .index("by_groupId", ["groupId"])
+    .index("by_code", ["code"])
+    .index("by_targetUserId", ["targetUserId"]),
+
   rounds: defineTable({
     name: v.string(),
     rewardDescription: v.string(), // e.g. "ชาบู MK สาขา ลาดพร้าว"
@@ -53,7 +84,10 @@ export default defineSchema({
     buffetDate: v.optional(v.number()), // timestamp
     createdBy: v.id("users"),
     goalReachedAt: v.optional(v.number()), // timestamp when group target was first hit
-  }).index("by_status", ["status"]),
+    groupId: v.optional(v.id("groups")), // null = legacy (pre-group) round
+  })
+    .index("by_status", ["status"])
+    .index("by_groupId", ["groupId"]),
 
   activityTypes: defineTable({
     name: v.string(),

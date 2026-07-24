@@ -8,6 +8,16 @@ export const getLeaderboardPage = query({
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
 
+    // Groups for group-selector chip row
+    const memberships = await ctx.db
+      .query("groupMembers")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+    const groupDocs = await Promise.all(memberships.map((m) => ctx.db.get(m.groupId)));
+    const myGroups = groupDocs
+      .filter(Boolean)
+      .map((g) => ({ _id: g!._id, name: g!.name }));
+
     const allActive = await ctx.db
       .query("rounds")
       .withIndex("by_status", (q) => q.eq("status", "active"))
@@ -19,7 +29,7 @@ export const getLeaderboardPage = query({
       myRounds[0] ??
       null;
 
-    if (!round) return { currentUserId: userId, myRounds, selectedRound: null, leaderboard: null };
+    if (!round) return { currentUserId: userId, myRounds, myGroups, selectedRound: null, leaderboard: null };
 
     const logs = await ctx.db
       .query("workoutLogs")
@@ -63,6 +73,7 @@ export const getLeaderboardPage = query({
     return {
       currentUserId: userId,
       myRounds,
+      myGroups,
       selectedRound: round,
       leaderboard: {
         entries,

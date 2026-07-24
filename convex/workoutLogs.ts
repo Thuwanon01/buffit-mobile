@@ -217,6 +217,25 @@ export const revokeLog = mutation({
 export const getLogsForRound = query({
   args: { roundId: v.id("rounds") },
   handler: async (ctx, { roundId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+    const user = await ctx.db.get(userId);
+    if (!user) return [];
+
+    const round = await ctx.db.get(roundId);
+    if (!round) return [];
+
+    // Check caller shares this group (or round is legacy/ungrouped)
+    if (round.groupId) {
+      const membership = await ctx.db
+        .query("groupMembers")
+        .withIndex("by_groupId_and_userId", (q) =>
+          q.eq("groupId", round.groupId!).eq("userId", user._id)
+        )
+        .unique();
+      if (!membership && !user.isAdmin) return [];
+    }
+
     return ctx.db
       .query("workoutLogs")
       .withIndex("by_roundId", (q) => q.eq("roundId", roundId))
@@ -261,15 +280,64 @@ export const getAllLogsForAdmin = query({
 
 
 export const getHistoryFeedData = query({
-  args: { roundId: v.optional(v.id("rounds")) },
-  handler: async (ctx, { roundId }) => {
-    const [allRounds, activities, users] = await Promise.all([
-      ctx.db.query("rounds").order("desc").collect(),
+  args: {
+    roundId: v.optional(v.id("rounds")),
+    groupId: v.optional(v.id("groups")),
+  },
+  handler: async (ctx, { roundId, groupId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return { rounds: [], selectedRound: null, logs: [], activities: [], users: [] };
+    const caller = await ctx.db.get(userId);
+    if (!caller) return { rounds: [], selectedRound: null, logs: [], activities: [], users: [] };
+
+    // Determine which group to scope to
+    let scopeGroupId = groupId;
+    if (!scopeGroupId) {
+      const memberships = await ctx.db
+        .query("groupMembers")
+        .withIndex("by_userId", (q) => q.eq("userId", caller._id))
+        .take(1);
+      scopeGroupId = memberships[0]?.groupId;
+    }
+
+    // Get all rounds visible to the caller (scoped to group)
+    let allRounds;
+    if (scopeGroupId) {
+      allRounds = await ctx.db
+        .query("rounds")
+        .withIndex("by_groupId", (q) => q.eq("groupId", scopeGroupId))
+        .order("desc")
+        .take(100);
+    } else {
+      // Fallback: legacy rounds (no groupId)
+      allRounds = await ctx.db
+        .query("rounds")
+        .order("desc")
+        .filter((q) => q.eq(q.field("groupId"), undefined))
+        .take(50);
+    }
+
+    // Get group members (only these users are shown in group history)
+    let groupUserIds: Set<string> = new Set();
+    if (scopeGroupId) {
+      const memberships = await ctx.db
+        .query("groupMembers")
+        .withIndex("by_groupId", (q) => q.eq("groupId", scopeGroupId!))
+        .collect();
+      groupUserIds = new Set(memberships.map((m) => m.userId as string));
+    }
+
+    const [activities, allUsers] = await Promise.all([
       ctx.db.query("activityTypes")
         .withIndex("by_status", (q) => q.eq("status", "approved"))
         .collect(),
-      ctx.db.query("users").collect(),
+      ctx.db.query("users").take(200),
     ]);
+
+    // Filter users to group members only (or all if no group)
+    const users = scopeGroupId
+      ? allUsers.filter((u) => groupUserIds.has(u._id as string))
+      : allUsers;
 
     const selectedRound =
       (roundId ? allRounds.find((r) => r._id === roundId) : null) ??
@@ -291,24 +359,64 @@ export const getHistoryFeedData = query({
 });
 
 export const getProgressData = query({
-  args: {},
-  handler: async (ctx) => {
-    const rounds = await ctx.db.query("rounds").order("asc").collect();
-    const allLogs = await ctx.db
-      .query("workoutLogs")
-      .filter((q) => q.eq(q.field("status"), "auto_approved"))
-      .collect();
-    const users = await ctx.db.query("users").collect();
+  args: { groupId: v.optional(v.id("groups")) },
+  handler: async (ctx, { groupId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return { rounds: [], users: [], entries: [] };
+    const caller = await ctx.db.get(userId);
+    if (!caller) return { rounds: [], users: [], entries: [] };
 
+    let scopeGroupId = groupId;
+    if (!scopeGroupId) {
+      const memberships = await ctx.db
+        .query("groupMembers")
+        .withIndex("by_userId", (q) => q.eq("userId", caller._id))
+        .take(1);
+      scopeGroupId = memberships[0]?.groupId;
+    }
+
+    let rounds;
+    let groupUserIds: Set<string> = new Set();
+
+    if (scopeGroupId) {
+      rounds = await ctx.db
+        .query("rounds")
+        .withIndex("by_groupId", (q) => q.eq("groupId", scopeGroupId))
+        .order("asc")
+        .take(100);
+      const memberships = await ctx.db
+        .query("groupMembers")
+        .withIndex("by_groupId", (q) => q.eq("groupId", scopeGroupId!))
+        .collect();
+      groupUserIds = new Set(memberships.map((m) => m.userId as string));
+    } else {
+      rounds = await ctx.db.query("rounds").order("asc").take(100);
+    }
+
+    const allUsers = await ctx.db.query("users").take(200);
+    const users = scopeGroupId
+      ? allUsers.filter((u) => groupUserIds.has(u._id as string))
+      : allUsers;
+
+    const roundIds = new Set(rounds.map((r) => r._id as string));
     const map = new Map<string, { userId: string; roundId: string; weightCoins: number; cardioCoins: number }>();
-    for (const log of allLogs) {
-      const key = `${log.userId}__${log.roundId}`;
-      if (!map.has(key)) {
-        map.set(key, { userId: String(log.userId), roundId: String(log.roundId), weightCoins: 0, cardioCoins: 0 });
+
+    for (const round of rounds) {
+      const logs = await ctx.db
+        .query("workoutLogs")
+        .withIndex("by_roundId", (q) => q.eq("roundId", round._id))
+        .filter((q) => q.eq(q.field("status"), "auto_approved"))
+        .collect();
+      for (const log of logs) {
+        if (!roundIds.has(log.roundId as string)) continue;
+        const key = `${log.userId}__${log.roundId}`;
+        if (!map.has(key)) {
+          map.set(key, { userId: String(log.userId), roundId: String(log.roundId), weightCoins: 0, cardioCoins: 0 });
+        }
+        const entry = map.get(key)!;
+        if (log.coinType === "weight") entry.weightCoins += log.coinsEarned;
+        else entry.cardioCoins += log.coinsEarned;
       }
-      const entry = map.get(key)!;
-      if (log.coinType === "weight") entry.weightCoins += log.coinsEarned;
-      else entry.cardioCoins += log.coinsEarned;
     }
 
     return {

@@ -66,7 +66,7 @@ export default function HistoryScreen() {
   const feedData = useQuery(api.workoutLogs.getHistoryFeedData, {
     roundId: selectedRoundId ?? undefined,
   });
-  const progressData = useQuery(api.workoutLogs.getProgressData);
+  const progressData = useQuery(api.workoutLogs.getProgressData, {});
   const me = useQuery(api.users.getCurrentUser);
 
   // Build chart data: current user's coins (weight + cardio) per round, sorted by creation time
